@@ -317,8 +317,8 @@ def data_mba(df):
     df_mba = df_mba[df_mba['ItemDescription'] != '']
     return df_mba
 
-df_mba = data_mba(df)
-
+# df_mba = data_mba(df) # pindahin ke page
+ 
 # 7.2. Build Basket
 @st.cache_data
 def build_basket(df_mba):
@@ -332,7 +332,7 @@ def build_basket(df_mba):
     basket = (basket > 0).astype(int)
     return basket
 
-basket = build_basket(df_mba)
+# basket = build_basket(df_mba) # pindahin ke page
 
 # 7.3. Run Apriori MBA
 @st.cache_data
@@ -357,48 +357,48 @@ def run_mba(basket):
     rules = rules.sort_values('lift', ascending=False).reset_index(drop=True)
     return rules
 
-rules = run_mba(basket)
+# rules = run_mba(basket) # pindahin ke page
 
-# 7.4. Build Combo Mapping (dedupe A↔B)
+# # 7.4. Build Combo Mapping (dedupe A↔B)
 
-# Extract single-item antecedent & consequent
-rules['ante'] = rules['antecedents'].apply(lambda x: list(x)[0])
-rules['cons'] = rules['consequents'].apply(lambda x: list(x)[0])
+# # Extract single-item antecedent & consequent
+# rules['ante'] = rules['antecedents'].apply(lambda x: list(x)[0])
+# rules['cons'] = rules['consequents'].apply(lambda x: list(x)[0])
 
-# Normalize pair (alphabetical order) → ensures A,B == B,A
-def normalize_pair(row):
-    a, b = row['ante'], row['cons']
-    return tuple(sorted([a, b]))
+# # Normalize pair (alphabetical order) → ensures A,B == B,A
+# def normalize_pair(row):
+#     a, b = row['ante'], row['cons']
+#     return tuple(sorted([a, b]))
 
-rules['pair'] = rules.apply(normalize_pair, axis=1)
+# rules['pair'] = rules.apply(normalize_pair, axis=1)
 
-# Keep only the strongest rule (highest lift) for each pair
-rules_unique = (
-    rules
-    .sort_values("lift", ascending=False)
-    .drop_duplicates(subset="pair", keep="first")
-    .reset_index(drop=True)
-)
+# # Keep only the strongest rule (highest lift) for each pair
+# rules_unique = (
+#     rules
+#     .sort_values("lift", ascending=False)
+#     .drop_duplicates(subset="pair", keep="first")
+#     .reset_index(drop=True)
+# )
 
-# Build combo text after dedupe
-rules_unique['combo'] = rules_unique.apply(
-    lambda x: f"{x['ante']} → {x['cons']}", axis=1
-)
+# # Build combo text after dedupe
+# rules_unique['combo'] = rules_unique.apply(
+#     lambda x: f"{x['ante']} → {x['cons']}", axis=1
+# )
 
-# Sidebar combo list
-combo_list = rules_unique['combo'].tolist()
+# # Sidebar combo list
+# combo_list = rules_unique['combo'].tolist()
 
-# Dictionary for quick lookup
-combo_dict = {
-    row['combo']: {
-        "ante": row['ante'],
-        "cons": row['cons'],
-        "support": row['support'],
-        "confidence": row['confidence'],
-        "lift": row['lift']
-    }
-    for _, row in rules_unique.iterrows()
-}
+# # Dictionary for quick lookup
+# combo_dict = {
+#     row['combo']: {
+#         "ante": row['ante'],
+#         "cons": row['cons'],
+#         "support": row['support'],
+#         "confidence": row['confidence'],
+#         "lift": row['lift']
+#     }
+#     for _, row in rules_unique.iterrows()
+# }
 
 #########################################
 # 8. MARKET BASKER ANALYSIS (MBA) PER CLUSTER
@@ -414,7 +414,7 @@ def prepare_mba_cluster(df_mba, rfm_kmeans):
     )
     return df_mba_cluster
 
-df_mba_cluster = prepare_mba_cluster(df_mba, rfm_kmeans)
+# df_mba_cluster = prepare_mba_cluster(df_mba, rfm_kmeans) # pindahin ke page
 
 # 8.2. Build basket per cluster
 @st.cache_data
@@ -491,13 +491,13 @@ def top3_categories_per_cluster(df_mba_cluster):
         .head(3)
     )
 
-rules_cluster_0, combo_dict_0 = run_mba_cluster(df_mba_cluster, 0)
-rules_cluster_1, combo_dict_1 = run_mba_cluster(df_mba_cluster, 1)
-rules_cluster_2, combo_dict_2 = run_mba_cluster(df_mba_cluster, 2)
-rules_cluster_3, combo_dict_3 = run_mba_cluster(df_mba_cluster, 3)
+# rules_cluster_0, combo_dict_0 = run_mba_cluster(df_mba_cluster, 0)
+# rules_cluster_1, combo_dict_1 = run_mba_cluster(df_mba_cluster, 1)
+# rules_cluster_2, combo_dict_2 = run_mba_cluster(df_mba_cluster, 2)
+# rules_cluster_3, combo_dict_3 = run_mba_cluster(df_mba_cluster, 3)
 
-basket_avg = basket_size_per_cluster(df_mba_cluster)
-top3_items = top3_categories_per_cluster(df_mba_cluster)
+# basket_avg = basket_size_per_cluster(df_mba_cluster)
+# top3_items = top3_categories_per_cluster(df_mba_cluster)
 
 #########################################
 # SIMPAN SEMUA FUNGSI KE st.session_state
@@ -515,6 +515,17 @@ if "gmm_result" not in st.session_state:
 if "inverse_rfm" not in st.session_state:
     st.session_state.inverse_rfm = None
 
+if "mba_global" not in st.session_state:
+    st.session_state.mba_global = None
+
+if "mba_cluster" not in st.session_state:
+    st.session_state.mba_cluster = {}
+    
+if "basket_avg" not in st.session_state:
+    st.session_state.basket_avg = None
+
+if "top3_items" not in st.session_state:
+    st.session_state.top3_items = None
 
 #########################################
 # 9. SIDEBAR 
@@ -1510,40 +1521,77 @@ elif page == "Clustering":
 elif page == "Market Basket Analysis":
     st.title("Market Basket Analysis (MBA)")
 
-    # ----------------------------
-    # Tabs untuk MBA Global & MBA per Cluster
-    # ----------------------------
     tab_global, tab_cluster = st.tabs(["MBA Global", "MBA per Cluster"])
 
-    # ----------------------------
-    # Tab MBA Global
-    # ----------------------------
+
+    # ============================================
+    # 1) TAB MBA GLOBAL
+    # ============================================
     with tab_global:
+
+        # --- compute ONLY ONCE ---
+        if st.session_state.mba_global is None:
+            df_mba = data_mba(df)
+            basket = build_basket(df_mba)
+            rules = run_mba(basket)
+
+            # combo building
+            rules['ante'] = rules['antecedents'].apply(lambda x: list(x)[0])
+            rules['cons'] = rules['consequents'].apply(lambda x: list(x)[0])
+            rules['pair'] = rules.apply(lambda r: tuple(sorted([r['ante'], r['cons']])), axis=1)
+
+            rules_unique = (
+                rules.sort_values("lift", ascending=False)
+                .drop_duplicates(subset="pair", keep="first")
+                .reset_index(drop=True)
+            )
+
+            rules_unique['combo'] = rules_unique.apply(lambda x: f"{x['ante']} → {x['cons']}", axis=1)
+
+            combo_dict = {
+                row['combo']: {
+                    "ante": row['ante'],
+                    "cons": row['cons'],
+                    "support": row['support'],
+                    "confidence": row['confidence'],
+                    "lift": row['lift']
+                }
+                for _, row in rules_unique.iterrows()
+            }
+
+            st.session_state.mba_global = {
+                "df_mba": df_mba,
+                "rules_unique": rules_unique,
+                "combo_dict": combo_dict,
+            }
+
+        # --- load from session ---
+        df_mba = st.session_state.mba_global["df_mba"]
+        rules_unique = st.session_state.mba_global["rules_unique"]
+        combo_dict = st.session_state.mba_global["combo_dict"]
+
         st.subheader("MBA Global Product Combos")
 
-        # Pilih combo langsung di tab
-        selected_combo = st.selectbox("Pilih combo produk", combo_list)
+        selected_combo = st.selectbox(
+            "Pilih combo produk",
+            rules_unique['combo'].tolist()
+        )
 
         st.markdown("---")
 
-        # Tampilkan detail combo
-        ante = combo_dict[selected_combo]["ante"]
-        cons = combo_dict[selected_combo]["cons"]
-        sup = combo_dict[selected_combo]["support"]
-        conf = combo_dict[selected_combo]["confidence"]
-        lift = combo_dict[selected_combo]["lift"]
+        info = combo_dict[selected_combo]
+        ante, cons = info["ante"], info["cons"]
 
         st.write(f"**Jika pelanggan membeli:** `{ante}` → **Mereka mungkin juga membeli:** `{cons}`")
 
         col1, col2, col3 = st.columns(3)
-        col1.metric("Support", f"{sup*100:.2f}%")
-        col2.metric("Confidence", f"{conf*100:.2f}%")
-        col3.metric("Lift", f"{lift:.2f}")
+        col1.metric("Support", f"{info['support']*100:.2f}%")
+       .col2.metric("Confidence", f"{info['confidence']*100:.2f}%")
+        col3.metric("Lift", f"{info['lift']:.2f}")
 
         st.markdown("---")
-        # ----------------------------
-        # Pelanggan potensial
-        # ----------------------------
+
+        # pelanggan potensial
         customers = (
             df_mba[df_mba["ItemDescription"] == ante]["UserId"]
             .dropna()
@@ -1554,91 +1602,116 @@ elif page == "Market Basket Analysis":
         st.subheader(f"Pelanggan Potensial untuk `{ante}`")
         st.write(f"**{len(customers)} pelanggan ditemukan**")
 
-        import numpy as np
-
-        def to_grid(data, cols=10):
-            rows = int(np.ceil(len(data) / cols))
-            grid = np.array(data + [""] * (rows*cols - len(data)))  # padding
-            grid = grid.reshape(rows, cols)
-            return pd.DataFrame(grid, columns=[f"Kolom {i+1}" for i in range(cols)])
-
         customer_grid = to_grid(customers, cols=10)
         st.dataframe(customer_grid)
 
         st.markdown("---")
 
-        # ----------------------------
-        # Tabel penuh aturan MBA
-        # ----------------------------
         with st.expander("Seluruh Aturan MBA (Diurutkan berdasarkan Lift)"):
-            st.dataframe(rules[['ante', 'cons', 'support', 'confidence', 'lift']])
+            st.dataframe(rules_unique[['ante','cons','support','confidence','lift']])
 
-    # ----------------------------
-    # Tab MBA Per Cluster
-    # ----------------------------
+
+    # ============================================
+    # 2) TAB MBA PER CLUSTER
+    # ============================================
     with tab_cluster:
+
         st.subheader("MBA Per Cluster")
+
+        # compute df_mba_cluster once
+        if st.session_state.kmeans_result is None:
+            st.warning("Jalankan K-Means terlebih dahulu.")
+            st.stop()
+
+        # build cluster mba df if not exist
+        if st.session_state.basket_avg is None:
+            df_mba = data_mba(df)
+            rfm_kmeans = st.session_state.kmeans_result["rfm_kmeans"]
+
+            df_mba_cluster = prepare_mba_cluster(df_mba, rfm_kmeans)
+            st.session_state.basket_avg = basket_size_per_cluster(df_mba_cluster)
+            st.session_state.top3_items = top3_categories_per_cluster(df_mba_cluster)
+            st.session_state.df_mba_cluster = df_mba_cluster
+        else:
+            df_mba_cluster = st.session_state.df_mba_cluster
 
         cluster_list = sorted(df_mba_cluster['Cluster'].unique())
         cluster_tabs = st.tabs([f"Cluster {c}" for c in cluster_list])
 
-        for i, c in enumerate(cluster_list):
-            with cluster_tabs[i]:
-                rules_cluster, combo_dict_cluster = run_mba_cluster(df_mba_cluster, c)
+
+        # cluster-level tabs
+        for idx, c in enumerate(cluster_list):
+            with cluster_tabs[idx]:
+
+                # compute mba cluster ONLY ONCE per cluster
+                if c not in st.session_state.mba_cluster:
+                    rules_cluster, combo_dict_cluster = run_mba_cluster(df_mba_cluster, c)
+                    st.session_state.mba_cluster[c] = {
+                        "rules_cluster": rules_cluster,
+                        "combo_dict_cluster": combo_dict_cluster
+                    }
+
+                rules_cluster = st.session_state.mba_cluster[c]["rules_cluster"]
+                combo_dict_cluster = st.session_state.mba_cluster[c]["combo_dict_cluster"]
 
                 st.success(f"Cluster **{c}**: {len(rules_cluster)} combo ditemukan")
 
                 if len(rules_cluster) > 0:
                     selected_combo_cluster = st.selectbox(
-                        f"Pilih combo produk", rules_cluster['combo'].tolist(), key=f"combo_{c}"
+                        "Pilih combo produk",
+                        rules_cluster['combo'].tolist(),
+                        key=f"combo_{c}"
                     )
 
-                    ante_c = combo_dict_cluster[selected_combo_cluster]["ante"]
-                    cons_c = combo_dict_cluster[selected_combo_cluster]["cons"]
-                    sup_c = combo_dict_cluster[selected_combo_cluster]["support"]
-                    conf_c = combo_dict_cluster[selected_combo_cluster]["confidence"]
-                    lift_c = combo_dict_cluster[selected_combo_cluster]["lift"]
+                    info_c = combo_dict_cluster[selected_combo_cluster]
+                    ante_c = info_c["ante"]
+                    cons_c = info_c["cons"]
 
                     st.markdown("---")
-
                     st.write(f"**Jika pelanggan membeli:** `{ante_c}` → **Mereka mungkin juga membeli:** `{cons_c}`")
+
                     col1, col2, col3 = st.columns(3)
-                    col1.metric("Support", f"{sup_c*100:.2f}%")
-                    col2.metric("Confidence", f"{conf_c*100:.2f}%")
-                    col3.metric("Lift", f"{lift_c:.2f}")
+                    col1.metric("Support", f"{info_c['support']*100:.2f}%")
+                    col2.metric("Confidence", f"{info_c['confidence']*100:.2f}%")
+                    col3.metric("Lift", f"{info_c['lift']:.2f}")
 
                     st.markdown("---")
 
-                    # Pelanggan potensial
                     customers_c = (
                         df_mba_cluster[
                             (df_mba_cluster["ItemDescription"] == ante_c) &
                             (df_mba_cluster["Cluster"] == c)
                         ]["UserId"].dropna().unique().tolist()
                     )
-                    st.subheader(f"Pelanggan Potensial untuk `{ante_c}` di Cluster {c}")
+
+                    st.subheader(f"Pelanggan Potensial Cluster {c}")
                     st.write(f"**{len(customers_c)} pelanggan ditemukan**")
 
                     customer_grid_c = to_grid(customers_c, cols=10)
                     st.dataframe(customer_grid_c)
+
                 else:
-                    st.write("Tidak ada combo yang memenuhi threshold untuk cluster ini.")
+                    st.write("Tidak ada combo untuk cluster ini.")
 
                 st.markdown("---")
 
-                # Basket size rata-rata
-                basket_avg = basket_size_per_cluster(df_mba_cluster)
-                avg_size = basket_avg[basket_avg['Cluster'] == c]['AvgBasketSize'].values[0]
-                st.subheader("Rata-rata Ukuran Keranjang per Transaksi")
-                st.write(f"Cluster **{c}**: rata-rata **{avg_size:.2f} item** per transaksi")
+                # basket size
+                avg_size = st.session_state.basket_avg[
+                    st.session_state.basket_avg['Cluster'] == c
+                ]['AvgBasketSize'].values[0]
+
+                st.subheader("Rata-rata Ukuran Keranjang")
+                st.write(f"Cluster **{c}**: **{avg_size:.2f} item** per transaksi")
 
                 st.markdown("---")
 
-                # Top 3 item
-                top3_items = top3_categories_per_cluster(df_mba_cluster)
-                top3_cluster = top3_items[top3_items['Cluster'] == c]
-                st.subheader("Top 3 Item Terbanyak per Cluster")
-                st.dataframe(top3_cluster[['ItemDescription', 'NumberOfItemsPurchased']])
+                # top 3 items
+                top3_cluster = st.session_state.top3_items[
+                    st.session_state.top3_items['Cluster'] == c
+                ]
+                st.subheader("Top 3 Item Terbanyak")
+                st.dataframe(top3_cluster[['ItemDescription','NumberOfItemsPurchased']])
+
 
 
 
@@ -1789,3 +1862,4 @@ elif page == "Interpretasi Bisnis":
         2. Exclusive Offers/Early Access: mendorong loyalitas dan pembelian berulang melalui promosi terbatas.  
         3. Program VIP: penghargaan untuk mempertahankan engagement dan meningkatkan lifetime value. 
         """)
+

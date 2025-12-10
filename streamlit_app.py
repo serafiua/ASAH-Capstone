@@ -130,7 +130,7 @@ def calculate_rfm(df_clustering):
 
     return rfm
 
-# rfm = calculate_rfm(df_clustering) # pindahin ke page
+rfm = calculate_rfm(df_clustering)
 
 # 3.2. rfm table per cust (page RFM, tab 1)
 @st.cache_data
@@ -178,7 +178,7 @@ def prepare_rfm_for_clustering(rfm):
 
     return rfm_final_2, pt, scaler
 
-# rfm_final_2, pt, scaler = prepare_rfm_for_clustering(rfm) # pindahin ke page
+rfm_final_2, pt, scaler = prepare_rfm_for_clustering(rfm)
 
 #########################################
 # 4. KMEANS
@@ -233,7 +233,7 @@ def run_kmeans(rfm_final_2, optimal_k=4):
     centroids_pca = pca.transform(centroids_df)
 
     return rfm_kmeans, wcss, metrics, kmeans_model, pca, centroids_pca, cluster_counts, segment_labels
-# (rfm_kmeans, wcss, kmeans_metrics, kmeans_model, pca, centroids_pca, cluster_counts, segment_labels) = run_kmeans(rfm_final_2) # pindahin ke page
+(rfm_kmeans, wcss, kmeans_metrics, kmeans_model, pca, centroids_pca, cluster_counts, segment_labels) = run_kmeans(rfm_final_2)
 
 
 #########################################
@@ -271,7 +271,7 @@ def run_gmm_clustering(rfm_final_2):
 
     return rfm_gmm_final, results, gmm_final
 
-# rfm_gmm_final, gmm_metrics, model_gmm = run_gmm_clustering(rfm_final_2) # pindahin ke page
+rfm_gmm_final, gmm_metrics, model_gmm = run_gmm_clustering(rfm_final_2)
 
 #########################################
 # 6. INVERSE RFM
@@ -303,7 +303,7 @@ def inverse_rfm(rfm_kmeans, _scaler, _pt):
 
     return rfm_inverse
 
-# rfm_kmeans_inverse = inverse_rfm(rfm_kmeans, scaler, pt) # pindahin ke page
+rfm_kmeans_inverse = inverse_rfm(rfm_kmeans, scaler, pt)
 
 #########################################
 # 7. MARKET BASKET ANALYSIS (MBA) GLOBAL 
@@ -317,8 +317,8 @@ def data_mba(df):
     df_mba = df_mba[df_mba['ItemDescription'] != '']
     return df_mba
 
-# df_mba = data_mba(df) # pindahin ke page
- 
+# df_mba = data_mba(df)
+
 # 7.2. Build Basket
 @st.cache_data
 def build_basket(df_mba):
@@ -332,7 +332,7 @@ def build_basket(df_mba):
     basket = (basket > 0).astype(int)
     return basket
 
-# basket = build_basket(df_mba) # pindahin ke page
+# basket = build_basket(df_mba)
 
 # 7.3. Run Apriori MBA
 @st.cache_data
@@ -357,7 +357,7 @@ def run_mba(basket):
     rules = rules.sort_values('lift', ascending=False).reset_index(drop=True)
     return rules
 
-# rules = run_mba(basket) # pindahin ke page
+# rules = run_mba(basket)
 
 # # 7.4. Build Combo Mapping (dedupe A↔B)
 
@@ -414,7 +414,7 @@ def prepare_mba_cluster(df_mba, rfm_kmeans):
     )
     return df_mba_cluster
 
-# df_mba_cluster = prepare_mba_cluster(df_mba, rfm_kmeans) # pindahin ke page
+# df_mba_cluster = prepare_mba_cluster(df_mba, rfm_kmeans)
 
 # 8.2. Build basket per cluster
 @st.cache_data
@@ -499,28 +499,18 @@ def top3_categories_per_cluster(df_mba_cluster):
 # basket_avg = basket_size_per_cluster(df_mba_cluster)
 # top3_items = top3_categories_per_cluster(df_mba_cluster)
 
-#########################################
-# SIMPAN SEMUA FUNGSI KE st.session_state
-#########################################
 
-if "rfm_final_2" not in st.session_state:
-    st.session_state.rfm_final_2 = None
+# simpan ke station_state
 
-if "kmeans_result" not in st.session_state:
-    st.session_state.kmeans_result = None
-
-if "gmm_result" not in st.session_state:
-    st.session_state.gmm_result = None
-
-if "inverse_rfm" not in st.session_state:
-    st.session_state.inverse_rfm = None
-
+# simpan mba global
 if "mba_global" not in st.session_state:
     st.session_state.mba_global = None
 
+# simpan mba cluster
 if "mba_cluster" not in st.session_state:
     st.session_state.mba_cluster = {}
-    
+
+# simpan basket avg & top3
 if "basket_avg" not in st.session_state:
     st.session_state.basket_avg = None
 
@@ -582,15 +572,6 @@ if page == "Home":
 #########################################
 elif page == "Analisis RFM":
     st.title("Analisis RFM")
-
-    # Hitung RFM saat masuk halaman ini
-    rfm = calculate_rfm(df_clustering)
-    rfm_final_2, pt, scaler = prepare_rfm_for_clustering(rfm)
-
-    # Simpan ke session_state buat halaman Clustering
-    st.session_state.rfm_final_2 = rfm_final_2
-    st.session_state.pt = pt
-    st.session_state.scaler = scaler
 
     row1_col1, row1_col2, row1_col3 = st.columns(3)
     row2_col1, row2_col2, row2_col3 = st.columns(3) 
@@ -912,21 +893,6 @@ elif page == "Analisis RFM":
         st.plotly_chart(fig_pct, use_container_width=True)
 
     with tab3:
-
-        # Pastikan clustering sudah selesai
-        if "kmeans_result" not in st.session_state or st.session_state.kmeans_result is None:
-            st.warning("Jalankan K-Means terlebih dahulu di halaman Clustering.")
-            st.stop()
-    
-        # Ambil data clustering dari session_state
-        rfm_kmeans = st.session_state.kmeans_result["rfm_kmeans"]
-        scaler = st.session_state.scaler
-        pt = st.session_state.pt
-    
-        # Hitung inverse RFM (HANYA SAAT TAB3 DIBUKA!)
-        rfm_kmeans_inverse = inverse_rfm(rfm_kmeans, scaler, pt)
-
-        # UI
         col1, col2 = st.columns([1.5, 2])
 
         # TREEMAP SEGMENT
@@ -1153,12 +1119,6 @@ elif page == "Analisis RFM":
 elif page == "Clustering":
     st.title("Clustering")
 
-    if st.session_state.rfm_final_2 is None:
-        st.warning("Silakan buka halaman Analisis RFM terlebih dahulu untuk menyiapkan data.")
-        st.stop()
-
-    rfm_final_2 = st.session_state.rfm_final_2
-
     tab1, tab2 = st.tabs(["K-Means", "Gaussian Mixture Model"]) 
  
     # ============================
@@ -1170,20 +1130,6 @@ elif page == "Clustering":
 
         # run kmeans
         rfm_kmeans, wcss, kmeans_metrics, kmeans_model, pca_kmeans, centroids_pca, cluster_counts, segment_labels = run_kmeans(rfm_final_2)
-
-        # simpan hasil ke session_state
-        st.session_state.kmeans_result = {
-            "rfm_kmeans": rfm_kmeans,
-            "scaler": scaler,
-            "pt": pt,
-            "wcss": wcss,
-            "metrics": kmeans_metrics,
-            "model": kmeans_model,
-            "pca": pca_kmeans,
-            "centroids": centroids_pca,
-            "clusters": cluster_counts,
-            "labels": segment_labels,
-        }
     
         # ============================
         # METRIC TABLE
@@ -1346,16 +1292,9 @@ elif page == "Clustering":
     with tab2:
         st.subheader("Gaussian Mixture Model (GMM)")
 
-        # run GMM
+        # --- Menjalankan GMM ---
         rfm_gmm_final, gmm_metrics, model_gmm = run_gmm_clustering(rfm_final_2)
 
-        # simpan hasil ke session_state
-        st.session_state.gmm_result = {
-            "rfm_gmm": rfm_gmm_final,
-            "metrics": gmm_metrics,
-            "model": model_gmm,
-        }
-        
         st.write("### 📊 Evaluation Metrics")
         st.dataframe(gmm_metrics, use_container_width=True)
 
@@ -1585,7 +1524,6 @@ elif page == "Market Basket Analysis":
         st.write(f"**Jika pelanggan membeli:** `{ante}` → **Mereka mungkin juga membeli:** `{cons}`")
 
         col1, col2, col3 = st.columns(3)
-        
         col1.metric("Support", f"{info['support']*100:.2f}%")
         col2.metric("Confidence", f"{info['confidence']*100:.2f}%")
         col3.metric("Lift", f"{info['lift']:.2f}")
@@ -1712,7 +1650,6 @@ elif page == "Market Basket Analysis":
                 ]
                 st.subheader("Top 3 Item Terbanyak")
                 st.dataframe(top3_cluster[['ItemDescription','NumberOfItemsPurchased']])
-
 
 
 

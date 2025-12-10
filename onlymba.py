@@ -84,15 +84,24 @@ def metric_card(title, value, delta=None, bg='#313234', text_color="white"):
 @st.cache_resource
 def data_mba(df):
     df_mba = df.copy()
+
+    # rapihin tipe data
     df_mba['TransactionId'] = df_mba['TransactionId'].astype(str)
     df_mba['ItemDescription'] = df_mba['ItemDescription'].astype(str).str.strip()
+
+    # buang item kosong
     df_mba = df_mba[df_mba['ItemDescription'] != '']
-    return df_mba
+
+    # SAMPLING 20% biar Streamlit Cloud ga nangis
+    df_mba_global = df_mba.sample(frac=0.2, random_state=42)
+
+    return df_mba_global
+
 
 @st.cache_resource
-def build_basket(df_mba):
+def build_basket(df_mba_global):
     basket = (
-        df_mba
+        df_mba_global
         .groupby(['TransactionId', 'ItemDescription'])['NumberOfItemsPurchased']
         .sum()
         .unstack()
@@ -129,8 +138,8 @@ page = st.session_state.page
 if page == "Market Basket Analysis":
     st.title("Market Basket Analysis (MBA)")
 
-    df_mba = data_mba(df)
-    basket = build_basket(df_mba)
+    df_mba_global = data_mba(df)
+    basket = build_basket(df_mba_global)
     rules = run_mba(basket)
 
     rules['ante'] = rules['antecedents'].apply(lambda x: list(x)[0])
@@ -172,7 +181,7 @@ if page == "Market Basket Analysis":
     col3.metric("Lift", f"{info['lift']:.2f}")
 
     customers = (
-        df_mba[df_mba["ItemDescription"] == ante]["UserId"]
+        df_mba_global[df_mba_global["ItemDescription"] == ante]["UserId"]
         .dropna()
         .unique()
         .tolist()

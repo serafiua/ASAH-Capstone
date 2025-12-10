@@ -1541,6 +1541,12 @@ elif page == "Market Basket Analysis":
         st.subheader(f"Pelanggan Potensial untuk `{ante}`")
         st.write(f"**{len(customers)} pelanggan ditemukan**")
 
+        def to_grid(data, cols=10):
+            rows = int(np.ceil(len(data) / cols))
+            grid = np.array(data + [""] * (rows*cols - len(data)))  # padding
+            grid = grid.reshape(rows, cols)
+            return pd.DataFrame(grid, columns=[f"Kolom {i+1}" for i in range(cols)])
+    
         customer_grid = to_grid(customers, cols=10)
         st.dataframe(customer_grid)
 
@@ -1557,15 +1563,9 @@ elif page == "Market Basket Analysis":
 
         st.subheader("MBA Per Cluster")
 
-        # compute df_mba_cluster once
-        if st.session_state.kmeans_result is None:
-            st.warning("Jalankan K-Means terlebih dahulu.")
-            st.stop()
-
         # build cluster mba df if not exist
         if st.session_state.basket_avg is None:
             df_mba = data_mba(df)
-            rfm_kmeans = st.session_state.kmeans_result["rfm_kmeans"]
 
             df_mba_cluster = prepare_mba_cluster(df_mba, rfm_kmeans)
             st.session_state.basket_avg = basket_size_per_cluster(df_mba_cluster)

@@ -1585,8 +1585,9 @@ elif page == "Market Basket Analysis":
         st.write(f"**Jika pelanggan membeli:** `{ante}` → **Mereka mungkin juga membeli:** `{cons}`")
 
         col1, col2, col3 = st.columns(3)
+        
         col1.metric("Support", f"{info['support']*100:.2f}%")
-       .col2.metric("Confidence", f"{info['confidence']*100:.2f}%")
+        col2.metric("Confidence", f"{info['confidence']*100:.2f}%")
         col3.metric("Lift", f"{info['lift']:.2f}")
 
         st.markdown("---")
@@ -1862,4 +1863,5 @@ elif page == "Interpretasi Bisnis":
         2. Exclusive Offers/Early Access: mendorong loyalitas dan pembelian berulang melalui promosi terbatas.  
         3. Program VIP: penghargaan untuk mempertahankan engagement dan meningkatkan lifetime value. 
         """)
+
 

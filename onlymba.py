@@ -166,6 +166,13 @@ if page == "Market Basket Analysis":
     }
 
     st.subheader("MBA Global Product Combos")
+    
+    if rules_unique.empty:
+        st.info("Tidak ada aturan MBA yang lolos filter ketat. Menampilkan aturan tanpa filter.")
+        rules_unique = rules.copy()
+        rules_unique['combo'] = rules_unique.apply(lambda x: f"{x['ante']} → {x['cons']}", axis=1)
+
+
     selected_combo = st.selectbox("Pilih combo produk", rules_unique['combo'].tolist())
 
     st.markdown("---")

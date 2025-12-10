@@ -1,0 +1,25 @@
+streamlit==1.39.0
+pandas==2.2.2
+numpy==1.26.4
+scikit-learn==1.5.2
+matplotlib==3.8.2
+seaborn==0.13.2
+plotly==5.22.0
+mlxtend==0.23.0
+
+altair==5.4.1
+jinja2==3.1.4
+pyarrow==18.1.0
+validators==0.28.0
+requests==2.31.0
+
+# extras
+streamlit-extras==0.3.5
+streamlit-card==1.0.2
+streamlit-toggle-switch==1.0.2
+streamlit-vertical-slider==2.5.5
+streamlit-avatar==0.1.3
+streamlit-faker==0.0.4
+streamlit-image-coordinates==0.1.2
+st-annotated-text==4.0.2
+st-theme==1.2.3

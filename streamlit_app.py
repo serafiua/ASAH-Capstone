@@ -309,7 +309,7 @@ rfm_kmeans_inverse = inverse_rfm(rfm_kmeans, scaler, pt)
 # 7. MARKET BASKET ANALYSIS (MBA) GLOBAL 
 #########################################
 # 7.1. Data preparation
-@st.cache_data
+@st.cache_resource
 def data_mba(df):
     df_mba = df.copy()
     df_mba['TransactionId'] = df_mba['TransactionId'].astype(str)
@@ -320,7 +320,7 @@ def data_mba(df):
 # df_mba = data_mba(df)
 
 # 7.2. Build Basket
-@st.cache_data
+@st.cache_resource
 def build_basket(df_mba):
     basket = (
         df_mba
@@ -335,7 +335,7 @@ def build_basket(df_mba):
 # basket = build_basket(df_mba)
 
 # 7.3. Run Apriori MBA
-@st.cache_data
+@st.cache_resource
 def run_mba(basket):
     frequent = apriori(
         basket,
@@ -404,7 +404,7 @@ def run_mba(basket):
 # 8. MARKET BASKER ANALYSIS (MBA) PER CLUSTER
 #########################################
 # 8.1. Data preparation
-@st.cache_data
+@st.cache_resource
 def prepare_mba_cluster(df_mba, rfm_kmeans):
     rfm_kmeans_mba = rfm_kmeans.rename(columns={'CustomerID':'UserId'})
     df_mba_cluster = df_mba.merge(
@@ -417,7 +417,7 @@ def prepare_mba_cluster(df_mba, rfm_kmeans):
 # df_mba_cluster = prepare_mba_cluster(df_mba, rfm_kmeans)
 
 # 8.2. Build basket per cluster
-@st.cache_data
+@st.cache_resource
 def build_basket_cluster(df_mba_cluster, cluster_id):
     subset = df_mba_cluster[df_mba_cluster['Cluster'] == cluster_id]
     basket = (
@@ -431,7 +431,7 @@ def build_basket_cluster(df_mba_cluster, cluster_id):
     return basket
 
 # 8.3. Run Apriori per cluster
-@st.cache_data
+@st.cache_resource
 def run_mba_cluster(df_mba_cluster, cluster_id, min_support=0.03, min_lift=1.2, min_conf=0.3):
     basket = build_basket_cluster(df_mba_cluster, cluster_id)
     frequent = apriori(basket, min_support=min_support, use_colnames=True)
@@ -466,7 +466,7 @@ def run_mba_cluster(df_mba_cluster, cluster_id, min_support=0.03, min_lift=1.2, 
     return rules_unique, combo_dict
 
 # 8.4. Hitung rata-rata basket size per cluster
-@st.cache_data
+@st.cache_resource
 def basket_size_per_cluster(df_mba_cluster):
     return (
         df_mba_cluster
@@ -479,7 +479,7 @@ def basket_size_per_cluster(df_mba_cluster):
     )
 
 # 8.5. Top 3 kategori per cluster
-@st.cache_data
+@st.cache_resource
 def top3_categories_per_cluster(df_mba_cluster):
     return (
         df_mba_cluster
@@ -1800,5 +1800,6 @@ elif page == "Interpretasi Bisnis":
         2. Exclusive Offers/Early Access: mendorong loyalitas dan pembelian berulang melalui promosi terbatas.  
         3. Program VIP: penghargaan untuk mempertahankan engagement dan meningkatkan lifetime value. 
         """)
+
 
 
